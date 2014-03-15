@@ -1,6 +1,5 @@
 # file: openssh/defaults/main.yml
 
-
 openssh_client_settings:
   Host: "*"
   Port: "22"
@@ -23,15 +22,12 @@ openssh_client_settings:
   ConnectTimeout: "0"
   StrictHostKeyChecking: "ask"
   Cipher: "3des"
-  Ciphers: "aes128-ctr,aes192-ctr,aes256-ctr,arcfour256,arcfour128,aes128-gcm@openssh.com,aes256-gcm@openssh.com, chacha20-poly1305@openssh.com,aes128-cbc,3des-cbc,blowfish-cbc,cast128-cbc,aes192-cbc,aes256-cbc,arcfour"
   MACs: "hmac-md5,hmac-sha1,umac-64@openssh.com,hmac-ripemd160"
   EscapeChar: "~"
   Tunnel: "no"
   TunnelDevice: "any:any"
   PermitLocalCommand: "no"
   VisualHostKey: "no"
-  CanonicalizeHostname: "no"
-  CanonicalizeMaxDots: "1"
   ChallengeResponseAuthentication: "yes"
   Compression: "no"
   CompressionLevel: "4"
@@ -41,15 +37,12 @@ openssh_client_settings:
   GatewayPorts: "no"
   UsePrivilegedPort: "no"
   TCPKeepAlive: "no"
-  StrictHostKeyChecking: "aks"
+  StrictHostKeyChecking: "ask"
 
 openssh_server_settings:
   Port: "22"
   AddressFamily: "any"
   Protocol: "2"
-  HostKeyRsa: "/etc/ssh/ssh_host_rsa_key"
-  HostKeyDsa: "/etc/ssh/ssh_host_dsa_key"
-  HostKeyEcdsa: "/etc/ssh/ssh_host_ecdsa_key"
   UsePrivilegeSeparation: "yes"
   KeyRegenerationInterval: "3600"
   ServerKeyBits: "1024"
@@ -98,5 +91,4 @@ openssh_server_settings:
   Compression: "delayed"
   PidFile: "/var/run/sshd.pid"
   PermitTunnel: "no"
-  PermitTTY: "yes"
   ChrootDirectory: "none"

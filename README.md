@@ -10,11 +10,11 @@ Ansible role which installs and configures openssh.
 #### Variables
 
 ```yaml
-opnessh_client_settings: []
-openssh_server_settings: []
+opnessh_client_settings: ...
+openssh_server_settings: ...
 ```
 
-See the defaults/main.yml to see the defaults.
+See the [defaults](defaults/main.yml) to have the complete view. Make sure, if you edit them, to copy all of them in your host/vars/... files, and change the ones that need tweaking (it's in fact only one variable, containing a map.)
 
 
 #### License
