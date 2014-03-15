@@ -1,7 +1,7 @@
 # file: openssh/defaults/main.yml
 
 
-opnessh_client_settings:
+openssh_client_settings:
   Host: "*"
   Port: "22"
   Protocol: "2,1"
