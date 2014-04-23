@@ -23,6 +23,7 @@
     mode: 0644
 
 - name: OpenSSH | Configure OpenSSH Server
+  when: ansible_os_family == "Debian"
   template:
     src: etc_ssh_sshd_config.j2
     dest: /etc/ssh/sshd_config
@@ -31,3 +32,14 @@
     mode: 0644
   notify:
     - restart ssh
+
+- name: OpenSSH | Configure OpenSSH Server
+  when: ansible_os_family == "RedHat"
+  template:
+    src: etc_ssh_sshd_config.j2
+    dest: /etc/ssh/sshd_config
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - restart sshd
