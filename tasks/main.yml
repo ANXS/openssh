@@ -12,7 +12,7 @@
   yum:
     pkg: "{{item}}"
     state: present
-  with_items: ["openssh-client", "openssh-server"]
+  with_items: ["openssh-clients", "openssh-server"]
 
 - name: OpenSSH | Configure OpenSSH Client
   template:
