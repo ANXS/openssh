@@ -7,7 +7,7 @@ openssh_client_settings:
   AddressFamily: "any"
   ForwardAgent: "no"
   ForwardX11: "no"
-  ForwardX11Timeout: "300"
+  #ForwardX11Timeout: "300"
   ForwardX11Trusted: "no"
   RhostsRSAAuthentication: "no"
   RSAAuthentication: "no"
