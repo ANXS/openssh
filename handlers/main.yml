@@ -6,7 +6,7 @@
     name: ssh
     state: restarted
 
-- name: restart ssh
+- name: restart sshd
   when: ansible_os_family == "RedHat"
   service:
     name: sshd
