@@ -1,6 +1,13 @@
 # file: openssh/handlers/main.yml
 
 - name: restart ssh
+  when: ansible_os_family == "Debian"
   service:
     name: ssh
+    state: restarted
+
+- name: restart ssh
+  when: ansible_os_family == "RedHat"
+  service:
+    name: sshd
     state: restarted
