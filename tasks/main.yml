@@ -36,7 +36,7 @@
 - name: OpenSSH | Configure OpenSSH Server
   when: ansible_os_family == "RedHat"
   template:
-    src: etc_ssh_sshd_config.j2
+    src: etc_ssh_sshd_config_RedHat.j2
     dest: /etc/ssh/sshd_config
     owner: root
     group: root
