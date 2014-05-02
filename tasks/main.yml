@@ -1,4 +1,7 @@
 # file: openssh/tasks/main.yml
+---
+vars_files:
+- "vars/{{ansible_os_family}}.yml"
 
 - name: OpenSSH | Make sure server and client packages are installed
   when: ansible_os_family == "Debian"
@@ -9,10 +12,9 @@
 
 - name: OpenSSH | Install on RedHat systems
   when: ansible_os_family == "RedHat"
-  yum:
-    pkg: "{{item}}"
-    state: present
-  with_items: ["openssh-clients", "openssh-server"]
+  yum: pkg={{ item }} state=present
+  with_items: 
+    - "{{ apps }}"
 
 - name: OpenSSH | Configure OpenSSH Client
   template:
