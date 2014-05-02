@@ -3,13 +3,13 @@
 vars_files:
 - "vars/{{ansible_os_family}}.yml"
 
-- name: OpenSSH | Make sure server and client packages are installed
+- name: OpenSSH | (Debian) Make sure server and client packages are installed
   when: ansible_os_family == "Debian"
   apt: pkg={{ item }} state=present
   with_items:
     - "{{ apps }}"
 
-- name: OpenSSH | Install on RedHat systems
+- name: OpenSSH | (RedHat) Make sure server and client packages are installed
   when: ansible_os_family == "RedHat"
   yum: pkg={{ item }} state=present
   with_items: 
@@ -24,20 +24,8 @@ vars_files:
     mode: 0644
 
 - name: OpenSSH | Configure OpenSSH Server
-  when: ansible_os_family == "Debian"
   template:
-    src: etc_ssh_sshd_config.j2
-    dest: /etc/ssh/sshd_config
-    owner: root
-    group: root
-    mode: 0644
-  notify:
-    - restart ssh
-
-- name: OpenSSH | Configure OpenSSH Server
-  when: ansible_os_family == "RedHat"
-  template:
-    src: etc_ssh_sshd_config_RedHat.j2
+    src: {{ src_sshd }}
     dest: /etc/ssh/sshd_config
     owner: root
     group: root

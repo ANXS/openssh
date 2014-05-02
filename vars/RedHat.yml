@@ -1,2 +1,3 @@
 apps: ["openssh-clients", "openssh-server"]
-ssh: sshd
+ssh: "sshd"
+src_sshd: "etc_ssh_sshd_config_RedHat.j2"
