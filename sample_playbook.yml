@@ -1,0 +1,6 @@
+---
+- hosts: test
+  roles:
+    - openssh
+  vars_files:
+    - "/etc/ansible/roles/openssh/vars/{{ansible_os_family}}.yml"

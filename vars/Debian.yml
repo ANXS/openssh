@@ -1,0 +1,3 @@
+apps: ["openssh-clients", "openssh-server"]
+ssh: "ssh"
+src_sshd: "etc_ssh_sshd_config.j2"
