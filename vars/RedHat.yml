@@ -1,0 +1,2 @@
+apps: ["openssh-clients", "openssh-server"]
+ssh: sshd

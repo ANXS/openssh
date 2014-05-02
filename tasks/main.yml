@@ -5,10 +5,9 @@ vars_files:
 
 - name: OpenSSH | Make sure server and client packages are installed
   when: ansible_os_family == "Debian"
-  apt:
-    pkg: "{{item}}"
-    state: present
-  with_items: ["openssh-client", "openssh-server"]
+  apt: pkg={{ item }} state=present
+  with_items:
+    - "{{ apps }}"
 
 - name: OpenSSH | Install on RedHat systems
   when: ansible_os_family == "RedHat"
@@ -44,4 +43,4 @@ vars_files:
     group: root
     mode: 0644
   notify:
-    - restart sshd
+    - restart ssh
