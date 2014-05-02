@@ -1,8 +1,4 @@
 # file: openssh/tasks/main.yml
----
-vars_files:
-- "vars/{{ansible_os_family}}.yml"
-
 - name: OpenSSH | (Debian) Make sure server and client packages are installed
   when: ansible_os_family == "Debian"
   apt: pkg={{ item }} state=present
