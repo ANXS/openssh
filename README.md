@@ -1,4 +1,4 @@
-## Ansibles - openssh [![Build Status](https://travis-ci.org/Ansibles/openssh.png)](https://travis-ci.org/Ansibles/openssh)
+## ANXS - openssh [![Build Status](https://travis-ci.org/ANXS/openssh.png)](https://travis-ci.org/ANXS/openssh)
 
 Ansible role which installs and configures openssh.
 
@@ -24,4 +24,4 @@ Licensed under the MIT License. See the LICENSE file for details.
 
 #### Feedback, bug-reports, requests, ...
 
-Are [welcome](https://github.com/ansibles/openssh/issues)!
+Are [welcome](https://github.com/ANXS/openssh/issues)!
