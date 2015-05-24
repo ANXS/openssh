@@ -64,7 +64,6 @@ openssh_server_settings:
   ChallengeResponseAuthentication: "no"
   PasswordAuthentication: "no"
   KerberosAuthentication: "no"
-  KerberosGetAFSToken: "no"
   KerberosOrLocalPasswd: "yes"
   KerberosTicketCleanup: "yes"
   GSSAPIAuthentication: "no"
