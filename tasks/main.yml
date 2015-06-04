@@ -28,9 +28,11 @@
   stat:
     path: "{{openssh_hostkey_file}}"
   register: anxs_openssh_hostkeys
+
 - name: OpenSSH | Ensure all host keys are generated
   command: ssh-keygen -A
   when: not anxs_openssh_hostkeys.stat.exists
+
 - name: OpenSSH | Remember we generated host keys
   file:
     dest: "{{openssh_hostkey_file}}"
