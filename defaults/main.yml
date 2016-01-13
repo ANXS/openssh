@@ -32,12 +32,10 @@ openssh_client_settings:
   Compression: "no"
   CompressionLevel: "4"
   ConnectionAttempts: "1"
-  ConnectTimeout: "30"
   ExitOnForwardFailure: "no"
   GatewayPorts: "no"
   UsePrivilegedPort: "no"
   TCPKeepAlive: "no"
-  StrictHostKeyChecking: "ask"
 
 openssh_server_settings:
   Port: "22"
