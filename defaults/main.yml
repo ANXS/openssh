@@ -19,7 +19,7 @@ openssh_client_settings:
   GSSAPITrustDNS: "no"
   BatchMode: "no"
   CheckHostIP: "yes"
-  ConnectTimeout: "0"
+  ConnectTimeout: "30"
   StrictHostKeyChecking: "ask"
   Cipher: "3des"
   MACs: "hmac-md5,hmac-sha1,umac-64@openssh.com,hmac-ripemd160"
