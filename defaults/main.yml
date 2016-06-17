@@ -21,7 +21,7 @@ openssh_client_settings:
   CheckHostIP: "yes"
   ConnectTimeout: "30"
   StrictHostKeyChecking: "ask"
-  Cipher: "3des"
+  Cipher: "aes256-cbc"
   MACs: "hmac-md5,hmac-sha1,umac-64@openssh.com,hmac-ripemd160"
   EscapeChar: "~"
   Tunnel: "no"
