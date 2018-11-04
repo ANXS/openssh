@@ -1,10 +1,8 @@
-# file: openssh/tasks/main.yml
-
+---
 - name: OpenSSH | Make sure server and client packages are installed
   apt:
-    pkg: "{{item}}"
+    pkg: "{{openssh_deps}}"
     state: present
-  with_items: ["openssh-client", "openssh-server"]
 
 - name: OpenSSH | Configure OpenSSH Client
   template:

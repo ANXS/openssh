@@ -4,7 +4,7 @@ Ansible role which installs and configures openssh. This role will ensure that a
 
 
 #### Requirements & Dependencies
-- Tested on Ansible 1.4 or higher.
+- Tested on Ansible 2.3 or higher.
 
 
 #### Variables

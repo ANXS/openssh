@@ -1,1 +1,5 @@
+---
+openssh_deps:
+  - openssh-client
+  - openssh-server
 openssh_hostkey_file: /var/run/anxs-openssh-hostkeys
