@@ -1,4 +1,4 @@
-## ANXS - openssh [![Build Status](https://travis-ci.org/ANXS/openssh.png)](https://travis-ci.org/ANXS/openssh)
+## ANXS - openssh [![Build Status](https://travis-ci.com/ANXS/openssh.png)](https://travis-ci.com/ANXS/openssh)
 
 Ansible role which installs and configures openssh. This role will ensure that all appropriate system hostkeys will be generated the first time it is run.
 
