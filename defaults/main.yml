@@ -1,5 +1,4 @@
-# file: openssh/defaults/main.yml
-
+---
 openssh_client_settings:
   Host: "*"
   Port: "22"

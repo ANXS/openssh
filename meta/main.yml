@@ -4,14 +4,14 @@ galaxy_info:
   author: pjan vandaele
   company: ANXS
   description: "Install and configure openssh"
-  min_ansible_version: 1.4
+  min_ansible_version: 2.3
   license: MIT
   platforms:
-  - name: Ubuntu
-    versions:
-    - all
+    - name: Ubuntu
+      versions:
+        - all
   categories:
-  - system
-  - networking
+    - system
+    - networking
 
 dependencies: []
