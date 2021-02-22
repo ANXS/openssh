@@ -1,4 +1,4 @@
 Host *
-{% for key, value in openssh_client_config.iteritems() %}
+{% for key, value in openssh_client_config.items() %}
 {{'    '}}{{key|e}} {{value|e}}
 {% endfor %}

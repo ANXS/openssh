@@ -1,9 +1,7 @@
 ---
-openssh_client_dist:
-  Cipher: "aes128-ctr,aes192-ctr,aes256-ctr,aes128-cbc,3des-cbc"
-
 openssh_server_dist:
   RekeyLimit: "default none"
   KerberosAuthentication: "no"
   KerberosOrLocalPasswd: "yes"
   KerberosTicketCleanup: "yes"
+  KerberosGetAFSToken: "no"
