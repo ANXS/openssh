@@ -1,0 +1,11 @@
+---
+openssh_client_dist:
+  Cipher: "aes256-cbc"
+  RSAAuthentication: "yes"
+
+openssh_server_dist:
+  UsePrivilegeSeparation: "yes"
+  KeyRegenerationInterval: "3600"
+  ServerKeyBits: "1024"
+  UseLogin: "no"
+  KerberosGetAFSToken: "no"

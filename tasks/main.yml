@@ -1,10 +1,35 @@
 ---
-- name: OpenSSH | Make sure server and client packages are installed
+- name: "default dist is xenial"
+  set_fact:
+    openssh_dist_config: "{{openssh_dist_default}}"
+
+- name: "check for dist overrides"
+  stat:
+    path: "{{role_path}}/vars/{{ansible_distribution_release|lower}}.yml"
+  connection: local
+  delegate_to: localhost
+  register: openssh_dist_override
+  become: false
+
+- name: "override dist config"
+  set_fact:
+    openssh_dist_config: "{{ansible_distribution_release|lower}}"
+  when: openssh_dist_override.stat.exists
+
+- name: "include dist overrides"
+  include_vars: "{{openssh_dist_config}}.yml"
+
+- name: "Make sure server and client packages are installed"
   apt:
     pkg: "{{openssh_deps}}"
     state: present
 
-- name: OpenSSH | Configure OpenSSH Client
+- name: "Set configuration with overrides"
+  set_fact:
+    openssh_client_config: "{{openssh_client_default|combine(openssh_client_dist|default({}))|combine(openssh_client_settings)}}"
+    openssh_server_config: "{{openssh_server_default|combine(openssh_server_dist|default({}))|combine(openssh_server_settings)}}"
+
+- name: "Configure OpenSSH Client"
   template:
     src: etc_ssh_ssh_config.j2
     dest: /etc/ssh/ssh_config
@@ -12,7 +37,7 @@
     group: root
     mode: 0644
 
-- name: OpenSSH | Configure OpenSSH Server
+- name: "Configure OpenSSH Server"
   template:
     src: etc_ssh_sshd_config.j2
     dest: /etc/ssh/sshd_config
@@ -22,16 +47,16 @@
   notify:
     - restart ssh
 
-- name: OpenSSH | Determine if previously generated host keys
+- name: "Determine if previously generated host keys"
   stat:
     path: "{{openssh_hostkey_file}}"
   register: anxs_openssh_hostkeys
 
-- name: OpenSSH | Ensure all host keys are generated
+- name: "Ensure all host keys are generated"
   command: ssh-keygen -A
   when: not anxs_openssh_hostkeys.stat.exists
 
-- name: OpenSSH | Remember we generated host keys
+- name: "Remember we generated host keys"
   file:
     dest: "{{openssh_hostkey_file}}"
     state: touch
