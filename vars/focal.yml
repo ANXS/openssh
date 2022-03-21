@@ -4,4 +4,3 @@ openssh_server_dist:
   KerberosAuthentication: "no"
   KerberosOrLocalPasswd: "yes"
   KerberosTicketCleanup: "yes"
-  KerberosGetAFSToken: "no"
