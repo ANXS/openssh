@@ -1,5 +1,5 @@
 ---
-openssh_dist_default: "xenial"
+openssh_dist_default: "focal"
 openssh_deps:
   - openssh-client
   - openssh-server
@@ -83,4 +83,3 @@ openssh_server_default:
   PidFile: "/var/run/sshd.pid"
   PermitTunnel: "no"
   ChrootDirectory: "none"
-

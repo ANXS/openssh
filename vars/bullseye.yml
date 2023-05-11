@@ -1,0 +1,6 @@
+---
+openssh_server_dist:
+  RekeyLimit: "default none"
+  KerberosAuthentication: "no"
+  KerberosOrLocalPasswd: "yes"
+  KerberosTicketCleanup: "yes"
