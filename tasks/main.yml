@@ -47,17 +47,24 @@
   notify:
     - restart ssh
 
+- name: "get rid of old host key lock file"
+  file:
+    path: "{{openssh_hostkey_file}}"
+    state: "absent"
+
 - name: "Determine if previously generated host keys"
   stat:
-    path: "{{openssh_hostkey_file}}"
-  register: anxs_openssh_hostkeys
+    path: "/etc/ssh/ssh_host_{{item}}_key"
+  register: openssh_hostkeys_stat
+  loop: "{{openssh_hostkey_types}}"
 
-- name: "Ensure all host keys are generated"
-  command: ssh-keygen -A
-  when: not anxs_openssh_hostkeys.stat.exists
+- name: "Check for public keys"
+  stat:
+    path: "/etc/ssh/ssh_host_{{item.item}}_key.pub"
+  loop: "{{openssh_hostkeys_stat.results}}"
+  failed_when: not item.stat.exists
 
-- name: "Remember we generated host keys"
-  file:
-    dest: "{{openssh_hostkey_file}}"
-    state: touch
-  when: not anxs_openssh_hostkeys.stat.exists
+- name: "Generate missing host keys"
+  command: "ssh-keygen -t {{item.item}} -f /etc/ssh/ssh_host_{{item}}_key"
+  when: not item.stat.exists
+  loop: "{{openssh_hostkeys_stat.results}}"

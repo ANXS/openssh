@@ -1,17 +1,21 @@
-# file: xxx/meta/main.yml
-
+---
 galaxy_info:
-  author: pjan vandaele
-  company: ANXS
+  author: "ANXS Crew"
+  company: "ANXS"
   description: "Install and configure openssh"
-  min_ansible_version: 2.7
+  min_ansible_version: 2.11
   license: MIT
   platforms:
-    - name: Ubuntu
+    - name: "Ubuntu"
       versions:
-        - all
+        - "jammy"
+        - "noble"
+    - name: "Debian"
+      versions:
+        - "bullseye"
+        - "bookworm"
   categories:
-    - system
-    - networking
+    - "system"
+    - "networking"
 
 dependencies: []

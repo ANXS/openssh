@@ -1,4 +1,8 @@
 Host *
-{% for key, value in openssh_client_config.items() %}
-{{'    '}}{{key|e}} {{value|e}}
+{% for key, value in openssh_client_config|dictsort %}
+{% if value is iterable and (var is not string) %}
+{{'    '}}{{key}} {{','.join(value)}}
+{% else %}
+{{'    '}}{{key}} {{value}}
+{% endif %}
 {% endfor %}

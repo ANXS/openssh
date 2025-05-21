@@ -1,9 +1,16 @@
 ---
 openssh_dist_default: "focal"
+
 openssh_deps:
-  - openssh-client
-  - openssh-server
+  - "openssh-client"
+  - "openssh-server"
+
 openssh_hostkey_file: /var/run/anxs-openssh-hostkeys
+
+openssh_hostkey_types:
+  - "dsa"
+  - "ecdsa"
+  - "ed25519"
 
 openssh_client_default:
   Port: "22"
@@ -67,7 +74,7 @@ openssh_server_default:
   PrintMotd: "no"
   PrintLastLog: "yes"
   TCPKeepAlive: "yes"
-  MaxStartups: "10:30:100"
+  MaxStartups: "5:75:20"
   Banner: "none"
   AcceptEnv: "LANG LC_*"
   Subsystem: "sftp /usr/lib/openssh/sftp-server"
@@ -83,3 +90,25 @@ openssh_server_default:
   PidFile: "/var/run/sshd.pid"
   PermitTunnel: "no"
   ChrootDirectory: "none"
+  HostKeyAlgorithms:
+    - "ecdsa-sha2-nistp384-cert-v01@openssh.com"
+    - "ecdsa-sha2-nistp521-cert-v01@openssh.com"
+    - "ssh-ed25519-cert-v01@openssh.com"
+    - "sk-ssh-ed25519-cert-v01@openssh.com"
+    - "rsa-sha2-512-cert-v01@openssh.com"
+    - "rsa-sha2-256-cert-v01@openssh.com"
+    - "ssh-rsa-cert-v01@openssh.com"
+    - "sk-ecdsa-sha2-nistp256@openssh.com"
+    - "ssh-ed25519"
+    - "sk-ssh-ed25519@openssh.com"
+    - "rsa-sha2-512"
+    - "rsa-sha2-256"
+  KexAlgorithms:
+    - "curve25519-sha256"
+    - "curve25519-sha256@libssh.org"
+    - "diffie-hellman-group16-sha512"
+    - "diffie-hellman-group18-sha512"
+    - "diffie-hellman-group-exchange-sha256"
+  MACs:
+    - "hmac-sha2-256-etm@openssh.com"
+    - "hmac-sha2-512-etm@openssh.com"
