@@ -7,11 +7,6 @@ openssh_deps:
 
 openssh_hostkey_file: /var/run/anxs-openssh-hostkeys
 
-openssh_hostkey_types:
-  - "dsa"
-  - "ecdsa"
-  - "ed25519"
-
 openssh_client_default:
   Port: "22"
   Protocol: "2"

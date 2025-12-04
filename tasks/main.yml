@@ -58,13 +58,7 @@
   register: openssh_hostkeys_stat
   loop: "{{openssh_hostkey_types}}"
 
-- name: "Check for public keys"
-  stat:
-    path: "/etc/ssh/ssh_host_{{item.item}}_key.pub"
-  loop: "{{openssh_hostkeys_stat.results}}"
-  failed_when: not item.stat.exists
-
 - name: "Generate missing host keys"
-  command: "ssh-keygen -t {{item.item}} -f /etc/ssh/ssh_host_{{item}}_key"
+  command: "ssh-keygen -t {{item.item}} -f /etc/ssh/ssh_host_{{item.item}}_key"
   when: not item.stat.exists
   loop: "{{openssh_hostkeys_stat.results}}"

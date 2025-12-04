@@ -1,3 +1,6 @@
 ---
 openssh_client_settings: {}
 openssh_server_settings: {}
+openssh_hostkey_types:
+  - "ecdsa"
+  - "ed25519"
