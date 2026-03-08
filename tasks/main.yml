@@ -1,64 +1,72 @@
 ---
-- name: "default dist is xenial"
-  set_fact:
-    openssh_dist_config: "{{openssh_dist_default}}"
+- name: "Set default dist config"
+  ansible.builtin.set_fact:
+    openssh_dist_config: "{{ openssh_dist_default }}"
 
-- name: "check for dist overrides"
-  stat:
-    path: "{{role_path}}/vars/{{ansible_distribution_release|lower}}.yml"
+- name: "Check for dist overrides"
+  ansible.builtin.stat:
+    path: "{{ role_path }}/vars/{{ ansible_distribution_release | lower }}.yml"
   connection: local
   delegate_to: localhost
   register: openssh_dist_override
   become: false
 
-- name: "override dist config"
-  set_fact:
-    openssh_dist_config: "{{ansible_distribution_release|lower}}"
+- name: "Override dist config"
+  ansible.builtin.set_fact:
+    openssh_dist_config: "{{ ansible_distribution_release | lower }}"
   when: openssh_dist_override.stat.exists
 
-- name: "include dist overrides"
-  include_vars: "{{openssh_dist_config}}.yml"
+- name: "Include dist overrides"
+  ansible.builtin.include_vars: "{{ openssh_dist_config }}.yml"
 
 - name: "Make sure server and client packages are installed"
-  apt:
-    pkg: "{{openssh_deps}}"
+  ansible.builtin.apt:
+    pkg: "{{ openssh_deps }}"
     state: present
 
 - name: "Set configuration with overrides"
-  set_fact:
-    openssh_client_config: "{{openssh_client_default|combine(openssh_client_dist|default({}))|combine(openssh_client_settings)}}"
-    openssh_server_config: "{{openssh_server_default|combine(openssh_server_dist|default({}))|combine(openssh_server_settings)}}"
+  ansible.builtin.set_fact:
+    openssh_client_config: >-
+      {{ openssh_client_default
+         | combine(openssh_client_dist | default({}))
+         | combine(openssh_client_settings) }}
+    openssh_server_config: >-
+      {{ openssh_server_default
+         | combine(openssh_server_dist | default({}))
+         | combine(openssh_server_settings) }}
 
 - name: "Configure OpenSSH Client"
-  template:
+  ansible.builtin.template:
     src: etc_ssh_ssh_config.j2
     dest: /etc/ssh/ssh_config
     owner: root
     group: root
-    mode: 0644
+    mode: "0644"
 
 - name: "Configure OpenSSH Server"
-  template:
+  ansible.builtin.template:
     src: etc_ssh_sshd_config.j2
     dest: /etc/ssh/sshd_config
     owner: root
     group: root
-    mode: 0644
+    mode: "0644"
   notify:
-    - restart ssh
+    - Restart ssh
 
-- name: "get rid of old host key lock file"
-  file:
-    path: "{{openssh_hostkey_file}}"
-    state: "absent"
+- name: "Remove old host key lock file"
+  ansible.builtin.file:
+    path: "{{ openssh_hostkey_file }}"
+    state: absent
 
 - name: "Determine if previously generated host keys"
-  stat:
-    path: "/etc/ssh/ssh_host_{{item}}_key"
+  ansible.builtin.stat:
+    path: "/etc/ssh/ssh_host_{{ item }}_key"
   register: openssh_hostkeys_stat
-  loop: "{{openssh_hostkey_types}}"
+  loop: "{{ openssh_hostkey_types }}"
 
 - name: "Generate missing host keys"
-  command: "ssh-keygen -t {{item.item}} -f /etc/ssh/ssh_host_{{item.item}}_key"
+  ansible.builtin.command:
+    cmd: "ssh-keygen -t {{ item.item }} -f /etc/ssh/ssh_host_{{ item.item }}_key -N ''"
+    creates: "/etc/ssh/ssh_host_{{ item.item }}_key"
   when: not item.stat.exists
-  loop: "{{openssh_hostkeys_stat.results}}"
+  loop: "{{ openssh_hostkeys_stat.results }}"

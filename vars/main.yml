@@ -1,5 +1,5 @@
 ---
-openssh_dist_default: "focal"
+openssh_dist_default: "bookworm"
 
 openssh_deps:
   - "openssh-client"
@@ -9,7 +9,6 @@ openssh_hostkey_file: /var/run/anxs-openssh-hostkeys
 
 openssh_client_default:
   Port: "22"
-  Protocol: "2"
   AddressFamily: "any"
   ForwardAgent: "no"
   ForwardX11: "no"
@@ -25,7 +24,12 @@ openssh_client_default:
   CheckHostIP: "yes"
   ConnectTimeout: "30"
   StrictHostKeyChecking: "ask"
-  MACs: "hmac-md5,hmac-sha1,umac-64@openssh.com"
+  MACs:
+    - "hmac-sha2-256-etm@openssh.com"
+    - "hmac-sha2-512-etm@openssh.com"
+    - "umac-128-etm@openssh.com"
+    - "hmac-sha2-256"
+    - "hmac-sha2-512"
   EscapeChar: "~"
   Tunnel: "no"
   TunnelDevice: "any:any"
@@ -36,13 +40,11 @@ openssh_client_default:
   ConnectionAttempts: "1"
   ExitOnForwardFailure: "no"
   GatewayPorts: "no"
-  UsePrivilegedPort: "no"
   TCPKeepAlive: "no"
 
 openssh_server_default:
   Port: "22"
   AddressFamily: "any"
-  Protocol: "2"
   SyslogFacility: "AUTH"
   LogLevel: "INFO"
   LoginGraceTime: "120"
@@ -86,24 +88,28 @@ openssh_server_default:
   PermitTunnel: "no"
   ChrootDirectory: "none"
   HostKeyAlgorithms:
+    - "ssh-ed25519-cert-v01@openssh.com"
+    - "ecdsa-sha2-nistp256-cert-v01@openssh.com"
     - "ecdsa-sha2-nistp384-cert-v01@openssh.com"
     - "ecdsa-sha2-nistp521-cert-v01@openssh.com"
-    - "ssh-ed25519-cert-v01@openssh.com"
     - "sk-ssh-ed25519-cert-v01@openssh.com"
+    - "sk-ecdsa-sha2-nistp256-cert-v01@openssh.com"
     - "rsa-sha2-512-cert-v01@openssh.com"
     - "rsa-sha2-256-cert-v01@openssh.com"
-    - "ssh-rsa-cert-v01@openssh.com"
-    - "sk-ecdsa-sha2-nistp256@openssh.com"
     - "ssh-ed25519"
     - "sk-ssh-ed25519@openssh.com"
+    - "sk-ecdsa-sha2-nistp256@openssh.com"
     - "rsa-sha2-512"
     - "rsa-sha2-256"
   KexAlgorithms:
     - "curve25519-sha256"
     - "curve25519-sha256@libssh.org"
+    - "diffie-hellman-group-exchange-sha256"
     - "diffie-hellman-group16-sha512"
     - "diffie-hellman-group18-sha512"
-    - "diffie-hellman-group-exchange-sha256"
   MACs:
     - "hmac-sha2-256-etm@openssh.com"
     - "hmac-sha2-512-etm@openssh.com"
+    - "umac-128-etm@openssh.com"
+    - "hmac-sha2-256"
+    - "hmac-sha2-512"

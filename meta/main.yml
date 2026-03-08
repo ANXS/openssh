@@ -1,21 +1,26 @@
 ---
 galaxy_info:
-  author: "ANXS Crew"
+  role_name: "openssh"
+  namespace: "anxs"
+  author: "ANXS Contributors"
   company: "ANXS"
-  description: "Install and configure openssh"
-  min_ansible_version: 2.11
-  license: MIT
+  description: "Install and configure OpenSSH client and server"
+  min_ansible_version: "2.12"
+  license: "MIT"
   platforms:
-    - name: "Ubuntu"
+    - name: Ubuntu
       versions:
-        - "jammy"
-        - "noble"
-    - name: "Debian"
+        - focal
+        - jammy
+        - noble
+    - name: Debian
       versions:
-        - "bullseye"
-        - "bookworm"
-  categories:
-    - "system"
-    - "networking"
+        - bullseye
+        - bookworm
+  galaxy_tags:
+    - system
+    - networking
+    - ssh
+    - security
 
 dependencies: []

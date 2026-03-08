@@ -1,0 +1,5 @@
+---
+# Ubuntu 24.04 (noble) — OpenSSH 9.6p1
+# No overrides needed — defaults match this version
+openssh_server_dist: {}
+openssh_client_dist: {}

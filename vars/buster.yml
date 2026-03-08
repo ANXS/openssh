@@ -1,4 +1,0 @@
----
-openssh_client_dist:
-  Cipher: "aes256-cbc"
-  RSAAuthentication: "yes"
