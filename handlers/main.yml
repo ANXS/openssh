@@ -1,6 +1,5 @@
-# file: openssh/handlers/main.yml
-
-- name: restart ssh
-  service:
+---
+- name: Restart ssh
+  ansible.builtin.service:
     name: ssh
     state: restarted

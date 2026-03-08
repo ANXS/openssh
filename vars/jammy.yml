@@ -1,0 +1,5 @@
+---
+# Ubuntu 22.04 (jammy) — OpenSSH 8.9p1
+# No overrides needed — defaults match this version
+openssh_server_dist: {}
+openssh_client_dist: {}

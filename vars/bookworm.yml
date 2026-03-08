@@ -1,0 +1,5 @@
+---
+# Debian 12 (bookworm) — OpenSSH 9.2p1
+# No overrides needed — defaults match this version
+openssh_server_dist: {}
+openssh_client_dist: {}

@@ -1,17 +1,26 @@
-# file: xxx/meta/main.yml
-
+---
 galaxy_info:
-  author: pjan vandaele
-  company: ANXS
-  description: "Install and configure openssh"
-  min_ansible_version: 2.3
-  license: MIT
+  role_name: "openssh"
+  namespace: "anxs"
+  author: "ANXS Contributors"
+  company: "ANXS"
+  description: "Install and configure OpenSSH client and server"
+  min_ansible_version: "2.12"
+  license: "MIT"
   platforms:
     - name: Ubuntu
       versions:
-        - all
-  categories:
+        - focal
+        - jammy
+        - noble
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+  galaxy_tags:
     - system
     - networking
+    - ssh
+    - security
 
 dependencies: []
