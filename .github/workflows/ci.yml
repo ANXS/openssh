@@ -43,6 +43,9 @@ jobs:
           - os: debian
             version: '12'
             image: geerlingguy/docker-debian12-ansible:latest
+          - os: debian
+            version: '13'
+            image: geerlingguy/docker-debian13-ansible:latest
           - os: ubuntu
             version: '2004'
             image: geerlingguy/docker-ubuntu2004-ansible:latest
