@@ -5,7 +5,7 @@
 
 - name: "Check for dist overrides"
   ansible.builtin.stat:
-    path: "{{ role_path }}/vars/{{ ansible_distribution_release | lower }}.yml"
+    path: "{{ role_path }}/vars/{{ ansible_facts['distribution_release'] | lower }}.yml"
   connection: local
   delegate_to: localhost
   register: openssh_dist_override
@@ -13,7 +13,7 @@
 
 - name: "Override dist config"
   ansible.builtin.set_fact:
-    openssh_dist_config: "{{ ansible_distribution_release | lower }}"
+    openssh_dist_config: "{{ ansible_facts['distribution_release'] | lower }}"
   when: openssh_dist_override.stat.exists
 
 - name: "Include dist overrides"
