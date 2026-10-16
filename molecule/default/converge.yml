@@ -3,5 +3,172 @@
   hosts: all
   become: true
   gather_facts: true
-  roles:
-    - role: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') | basename }}"
+  vars:
+    openssh_role_dir: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}"
+    openssh_probe_spec: "user=sshdprobe,host=molecule.invalid,addr=127.0.0.1"
+    openssh_probe_listen: "permitlisten 127.0.0.1:22999"
+    openssh_candidate_config: "/var/tmp/molecule-sshd-config-includes-enabled"
+  tasks:
+    # No variable overrides: this pins the role's DEFAULT behaviour.
+    - name: "Apply the role with default settings"
+      ansible.builtin.include_role:
+        name: "{{ openssh_role_dir | basename }}"
+
+    - name: "Load the role defaults so this play can pin them"
+      ansible.builtin.include_vars:
+        file: "{{ openssh_role_dir }}/defaults/main.yml"
+        name: openssh_role_defaults
+
+    # --- default state: no Include, drop-ins inert -------------------------
+
+    - name: "Read the installed sshd_config"
+      ansible.builtin.slurp:
+        src: "/etc/ssh/sshd_config"
+      register: openssh_installed_config
+
+    - name: "Assert the default config emits no Include"
+      ansible.builtin.assert:
+        that:
+          - openssh_installed_directives
+            | select('match', '(?i)include\\s')
+            | list | length == 0
+        fail_msg: >-
+          The default render of sshd_config contains an Include directive.
+          Turning drop-ins on is opt-in only.
+        quiet: true
+      vars:
+        openssh_installed_directives: >-
+          {{ (openssh_installed_config.content | b64decode).splitlines()
+             | map('trim') | reject('match', '#') | reject('equalto', '')
+             | list }}
+
+    - name: "Ask sshd what it resolves for the probe user, default config"
+      ansible.builtin.command:
+        cmd: "/usr/sbin/sshd -T -C {{ openssh_probe_spec }}"
+      changed_when: false
+      register: openssh_resolved_default
+
+    - name: "Assert the probe drop-in is inert with the default config"
+      ansible.builtin.assert:
+        that:
+          - openssh_probe_listen not in openssh_resolved_default.stdout
+          - "'permittty yes' in openssh_resolved_default.stdout"
+        fail_msg: >-
+          /etc/ssh/sshd_config.d/60-molecule-probe.conf reached the daemon
+          with the Include disabled. Resolved config was:
+          {{ openssh_resolved_default.stdout }}
+        quiet: true
+
+    # --- enabled state: Include first, drop-ins live -----------------------
+    #
+    # Rendered to a candidate path, not installed, so the converged state
+    # stays the default one. sshd -T -f resolves it with the real parser.
+    - name: "Render the includes-enabled candidate config"
+      ansible.builtin.template:
+        src: "{{ openssh_role_dir }}/templates/etc_ssh_sshd_config.j2"
+        dest: "{{ openssh_candidate_config }}"
+        owner: root
+        group: root
+        mode: "0600"
+        validate: "/usr/sbin/sshd -t -f %s"
+      vars:
+        openssh_enable_config_includes: true
+        openssh_config_includes_path: "{{ openssh_role_defaults.openssh_config_includes_path }}"
+
+    - name: "Read the includes-enabled candidate config"
+      ansible.builtin.slurp:
+        src: "{{ openssh_candidate_config }}"
+      register: openssh_candidate_content
+
+    # sshd takes the first obtained value for each keyword, so an Include
+    # below the global settings would be outvoted by every keyword set here.
+    - name: "Assert the Include is the first directive, not merely present"
+      ansible.builtin.assert:
+        that:
+          - openssh_candidate_directives | length > 1
+          - openssh_candidate_directives[0]
+            == 'Include ' ~ openssh_role_defaults.openssh_config_includes_path
+          - openssh_candidate_directives
+            | select('match', '(?i)include\\s') | list | length == 1
+        fail_msg: >-
+          Include must be the first directive in sshd_config. First directives
+          were: {{ openssh_candidate_directives[:3] }}
+        quiet: true
+      vars:
+        openssh_candidate_directives: >-
+          {{ (openssh_candidate_content.content | b64decode).splitlines()
+             | map('trim') | reject('match', '#') | reject('equalto', '')
+             | list }}
+
+    - name: "Ask sshd what it resolves for the probe user, includes enabled"
+      ansible.builtin.command:
+        cmd: >-
+          /usr/sbin/sshd -T -f {{ openssh_candidate_config }}
+          -C {{ openssh_probe_spec }}
+      changed_when: false
+      register: openssh_resolved_includes
+
+    - name: "Assert the probe drop-in actually reaches the resolved config"
+      ansible.builtin.assert:
+        that:
+          - openssh_probe_listen in openssh_resolved_includes.stdout
+          - "'permittty no' in openssh_resolved_includes.stdout"
+        fail_msg: >-
+          With the Include enabled, sshd still does not see
+          /etc/ssh/sshd_config.d/60-molecule-probe.conf. Resolved config was:
+          {{ openssh_resolved_includes.stdout }}
+        quiet: true
+
+    # --- validate: must refuse a config sshd cannot parse ------------------
+    - name: "Assert validate rejects an unparseable sshd_config"
+      block:
+        - name: "Apply the role with a deliberately broken server setting"
+          ansible.builtin.include_role:
+            name: "{{ openssh_role_dir | basename }}"
+          vars:
+            openssh_server_settings:
+              MoleculeDeliberatelyBrokenKeyword: "wat"
+
+        - name: "Fail because the broken sshd_config was accepted"
+          ansible.builtin.fail:
+            msg: >-
+              "Configure OpenSSH Server" wrote a config that sshd cannot
+              parse. validate: is missing or ineffective, and on a remote host
+              that means sshd does not come back.
+
+      rescue:
+        - name: "Assert sshd itself is what refused the broken config"
+          ansible.builtin.assert:
+            that:
+              - ansible_failed_task.name is search('Configure OpenSSH Server')
+              - "'bad configuration option' in openssh_failure_text | lower"
+            fail_msg: >-
+              The broken converge failed, but not because sshd rejected the
+              candidate config. Failed task was
+              {{ ansible_failed_task.name }}: {{ openssh_failure_text }}
+            quiet: true
+          vars:
+            openssh_failure_text: >-
+              {{ (ansible_failed_result.msg | default('')) ~ ' ' ~
+                 (ansible_failed_result.stderr | default('')) ~ ' ' ~
+                 (ansible_failed_result.stdout | default('')) }}
+
+        - name: "Re-read sshd_config after the rejected write"
+          ansible.builtin.slurp:
+            src: "/etc/ssh/sshd_config"
+          register: openssh_config_after_reject
+
+        - name: "Assert the rejected config was never written"
+          ansible.builtin.assert:
+            that:
+              - openssh_config_after_reject.content == openssh_installed_config.content
+              - "'MoleculeDeliberatelyBrokenKeyword'
+                 not in (openssh_config_after_reject.content | b64decode)"
+            fail_msg: >-
+              /etc/ssh/sshd_config changed even though validation failed.
+            quiet: true
+
+        - name: "Confirm sshd still parses the installed config"
+          ansible.builtin.command:
+            cmd: "/usr/sbin/sshd -t"
+          changed_when: false

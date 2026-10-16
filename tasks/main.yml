@@ -1,4 +1,16 @@
 ---
+- name: "Assert drop-in include flag is an explicit boolean"
+  ansible.builtin.assert:
+    that:
+      - openssh_enable_config_includes is defined
+      - openssh_enable_config_includes is boolean
+    fail_msg: >-
+      openssh_enable_config_includes must be a literal YAML boolean, not a
+      truthy string: enabling the Include activates every file already in
+      {{ openssh_config_includes_path }} at once. Audit that directory on
+      the target host, then set a real boolean in group_vars/host_vars.
+    quiet: true
+
 - name: "Set default dist config"
   ansible.builtin.set_fact:
     openssh_dist_config: "{{ openssh_dist_default }}"
@@ -24,40 +36,9 @@
     pkg: "{{ openssh_deps }}"
     state: present
 
-- name: "Set configuration with overrides"
-  ansible.builtin.set_fact:
-    openssh_client_config: >-
-      {{ openssh_client_default
-         | combine(openssh_client_dist | default({}))
-         | combine(openssh_client_settings) }}
-    openssh_server_config: >-
-      {{ openssh_server_default
-         | combine(openssh_server_dist | default({}))
-         | combine(openssh_server_settings) }}
-
-- name: "Configure OpenSSH Client"
-  ansible.builtin.template:
-    src: etc_ssh_ssh_config.j2
-    dest: /etc/ssh/ssh_config
-    owner: root
-    group: root
-    mode: "0644"
-
-- name: "Configure OpenSSH Server"
-  ansible.builtin.template:
-    src: etc_ssh_sshd_config.j2
-    dest: /etc/ssh/sshd_config
-    owner: root
-    group: root
-    mode: "0644"
-  notify:
-    - Restart ssh
-
-- name: "Remove old host key lock file"
-  ansible.builtin.file:
-    path: "{{ openssh_hostkey_file }}"
-    state: absent
-
+# sshd -t is not a pure parser: it refuses to run without a loadable host key
+# and the privilege separation directory. Both must therefore exist before any
+# config is templated with validate:.
 - name: "Determine if previously generated host keys"
   ansible.builtin.stat:
     path: "/etc/ssh/ssh_host_{{ item }}_key"
@@ -70,3 +51,46 @@
     creates: "/etc/ssh/ssh_host_{{ item.item }}_key"
   when: not item.stat.exists
   loop: "{{ openssh_hostkeys_stat.results }}"
+
+# systemd owns this as ssh.service's RuntimeDirectory and removes it on stop,
+# so it is legitimately absent wherever sshd has not run yet.
+- name: "Make sure the privilege separation directory exists"
+  ansible.builtin.file:
+    path: "{{ openssh_privsep_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: "Set configuration with overrides"
+  ansible.builtin.set_fact:
+    openssh_client_config: >-
+      {{ openssh_client_default
+         | combine(openssh_client_dist | default({}))
+         | combine(openssh_client_settings) }}
+    openssh_server_config: >-
+      {{ openssh_server_default
+         | combine(openssh_server_dist | default({}))
+         | combine(openssh_server_settings) }}
+
+# No daemon to notify for the client config. ssh -G only parses, -F limits it
+# to the candidate file, and the placeholder host generates no traffic.
+- name: "Configure OpenSSH Client"
+  ansible.builtin.template:
+    src: etc_ssh_ssh_config.j2
+    dest: /etc/ssh/ssh_config
+    owner: root
+    group: root
+    mode: "0644"
+    validate: "/usr/bin/ssh -G -F %s config-validation.invalid"
+
+- name: "Configure OpenSSH Server"
+  ansible.builtin.template:
+    src: etc_ssh_sshd_config.j2
+    dest: /etc/ssh/sshd_config
+    owner: root
+    group: root
+    mode: "0644"
+    validate: "/usr/sbin/sshd -t -f %s"
+  notify:
+    - Reload ssh

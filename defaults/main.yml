@@ -4,3 +4,11 @@ openssh_server_settings: {}
 openssh_hostkey_types:
   - "ecdsa"
   - "ed25519"
+
+# Opt-in, and default-off deliberately: enabling the Include activates EVERY
+# file already in openssh_config_includes_path at once, not just the one you
+# came for. Audit that directory on the target host first. Must be a literal
+# YAML boolean -- the role asserts on it. See README for the full hazard.
+openssh_enable_config_includes: false
+
+openssh_config_includes_path: "/etc/ssh/sshd_config.d/*.conf"

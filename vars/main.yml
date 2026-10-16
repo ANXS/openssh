@@ -5,7 +5,8 @@ openssh_deps:
   - "openssh-client"
   - "openssh-server"
 
-openssh_hostkey_file: /var/run/anxs-openssh-hostkeys
+# sshd refuses to run at all, including under sshd -t, if this is missing.
+openssh_privsep_dir: /run/sshd
 
 openssh_client_default:
   Port: "22"
@@ -84,7 +85,7 @@ openssh_server_default:
   ClientAliveCountMax: "0"
   PermitUserEnvironment: "no"
   Compression: "delayed"
-  PidFile: "/var/run/sshd.pid"
+  PidFile: "/run/sshd.pid"
   PermitTunnel: "no"
   ChrootDirectory: "none"
   HostKeyAlgorithms:

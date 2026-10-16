@@ -1,4 +1,14 @@
 ---
+# Reload, not restart: ssh.service runs sshd -t in ExecReload while the daemon
+# is still serving, so a config it rejects aborts the reload and leaves the
+# running sshd up. A restart stops sshd first and then fails to start it.
+- name: Reload ssh
+  ansible.builtin.service:
+    name: ssh
+    state: reloaded
+
+# Port, ListenAddress and AddressFamily are read only at startup, so a reload
+# does not apply them. Nothing in this role notifies this.
 - name: Restart ssh
   ansible.builtin.service:
     name: ssh

@@ -1,4 +1,11 @@
 # {{ ansible_managed }}
+{% if openssh_enable_config_includes | bool %}
+{# Include MUST stay the first directive in this file. sshd uses the first #}
+{# obtained value for each keyword, so an Include placed after the settings #}
+{# below could never override any of them. #}
+Include {{ openssh_config_includes_path }}
+
+{% endif %}
 {% for key, value in (openssh_server_config|dictsort) %}
 {% if value is string %}
 {{key}} {{value}}
