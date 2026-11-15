@@ -1,15 +1,13 @@
 ---
-# Reload, not restart: ssh.service runs sshd -t in ExecReload while the daemon
-# is still serving, so a config it rejects aborts the reload and leaves the
-# running sshd up. A restart stops sshd first and then fails to start it.
-- name: Reload ssh
-  ansible.builtin.service:
-    name: ssh
-    state: reloaded
+# systemd_service state=reloaded starts an inactive unit. Keep this strict:
+# a caller asking for reload must never create a competing listener.
+- name: Reload ssh  # noqa command-instead-of-module
+  ansible.builtin.command:
+    cmd: "systemctl reload ssh.service"
+  changed_when: true
 
-# Port, ListenAddress and AddressFamily are read only at startup, so a reload
-# does not apply them. Nothing in this role notifies this.
+# Port, ListenAddress and AddressFamily are read only at startup.
 - name: Restart ssh
-  ansible.builtin.service:
+  ansible.builtin.systemd_service:
     name: ssh
     state: restarted

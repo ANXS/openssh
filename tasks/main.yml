@@ -75,6 +75,40 @@
 
 # No daemon to notify for the client config. ssh -G only parses, -F limits it
 # to the candidate file, and the placeholder host generates no traffic.
+- name: "Gather service facts"
+  ansible.builtin.service_facts:
+
+- name: "Record whether the managed SSH service is running"
+  ansible.builtin.set_fact:
+    openssh_service_running: >-
+      {{ ansible_facts.services['ssh.service'].state == 'running' }}
+
+- name: "Check for sshd processes outside an active service"
+  ansible.builtin.command:
+    cmd: "pgrep -x sshd"
+  register: openssh_unmanaged_sshd
+  changed_when: false
+  failed_when: openssh_unmanaged_sshd.rc not in [0, 1]
+  when: not openssh_service_running
+
+- name: "Refuse to start alongside unmanaged sshd processes"
+  ansible.builtin.assert:
+    that:
+      - openssh_unmanaged_sshd.rc == 1
+    fail_msg: >-
+      ssh.service is inactive, but sshd process(es)
+      {{ openssh_unmanaged_sshd.stdout_lines | join(', ') }} still exist.
+      Refusing to start a second listener or replace sshd_config. Reconcile
+      the orphaned daemon with systemd first.
+    quiet: true
+  when: not openssh_service_running
+
+- name: "Start the managed SSH service when inactive"
+  ansible.builtin.systemd_service:
+    name: ssh
+    state: started
+  when: not openssh_service_running
+
 - name: "Configure OpenSSH Client"
   ansible.builtin.template:
     src: etc_ssh_ssh_config.j2
@@ -92,5 +126,11 @@
     group: root
     mode: "0644"
     validate: "/usr/sbin/sshd -t -f %s"
-  notify:
-    - Reload ssh
+  register: openssh_server_config_file
+
+# Apply a changed config while the lifecycle preflight is still current.
+- name: "Reload OpenSSH after a server config change"  # noqa command-instead-of-module no-handler
+  ansible.builtin.command:
+    cmd: "systemctl reload ssh.service"
+  changed_when: true
+  when: openssh_server_config_file.changed

@@ -64,15 +64,20 @@ value fails the play instead of breaking the host:
 or the privilege separation directory. Host keys are therefore generated, and
 `/run/sshd` created, before either config is templated.
 
-A config change notifies **`Reload ssh`**, not a restart. On Debian and Ubuntu
-`ssh.service` runs `/usr/sbin/sshd -t` in both `ExecStartPre` and `ExecReload`.
-A restart stops sshd first, so a config it will not accept leaves the daemon
-down; a reload runs the same check while sshd is still serving, and a bad
-config aborts the reload with the previous config still live. Reload also keeps
-established sessions, so a converge does not disconnect the operator running
-it. Directives read only at startup -- `Port`, `ListenAddress`,
-`AddressFamily` -- are not picked up by a reload; a `Restart ssh` handler is
-still defined for those, and nothing in the role notifies it.
+Before writing either config, the role checks the managed service lifecycle.
+An inactive `ssh.service` with any extant `sshd` process is refused: starting
+another daemon would collide with the existing listener, while a failed start
+can remove `/run/sshd` and leave that listener accepting connections it cannot
+authenticate. An inactive service with no `sshd` process is started normally.
+
+A server config change is followed immediately by a strict `systemctl reload
+ssh.service`. This intentionally does not use Ansible's `state: reloaded`,
+which starts an inactive unit and can turn a reload into a competing listener.
+On Debian and Ubuntu, `ExecReload` runs `/usr/sbin/sshd -t` before signalling
+the daemon, so a bad config aborts while the previous config remains live.
+Reload also keeps established sessions. Directives read only at startup --
+`Port`, `ListenAddress`, and `AddressFamily` -- are not picked up by a
+reload; a `Restart ssh` handler remains available for explicit callers.
 
 Notable server defaults out of the box:
 

@@ -59,6 +59,132 @@
           {{ openssh_resolved_default.stdout }}
         quiet: true
 
+    # --- inactive unit with an unmanaged listener --------------------------
+
+    - name: "Check whether the orphan-listener regression already ran"
+      ansible.builtin.stat:
+        path: /var/tmp/molecule-openssh-orphan-regression-complete
+      register: openssh_orphan_regression_marker
+
+    - name: "Exercise the unmanaged-listener refusal once"
+      when: not openssh_orphan_regression_marker.stat.exists
+      block:
+        - name: "Check whether SSH socket activation is active"  # noqa command-instead-of-module
+          ansible.builtin.command:
+            cmd: "systemctl is-active --quiet ssh.socket"
+          register: openssh_socket_active
+          changed_when: false
+          failed_when: openssh_socket_active.rc not in [0, 3, 4]
+
+        - name: "Stop SSH socket activation for the orphan regression"
+          ansible.builtin.systemd_service:
+            name: ssh.socket
+            state: stopped
+          when: openssh_socket_active.rc == 0
+
+        - name: "Stop the managed SSH service"
+          ansible.builtin.systemd_service:
+            name: ssh
+            state: stopped
+
+        - name: "Recreate the privilege separation directory"
+          ansible.builtin.file:
+            path: /run/sshd
+            state: directory
+            owner: root
+            group: root
+            mode: "0755"
+
+        - name: "Start an unmanaged listener on the SSH port"
+          ansible.builtin.command:
+            cmd: >-
+              systemd-run --unit=molecule-sshd-orphan
+              --property=Type=exec
+              /usr/sbin/sshd -D -f /etc/ssh/sshd_config
+          changed_when: true
+
+        - name: "Wait for the unmanaged listener"
+          ansible.builtin.wait_for:
+            host: 127.0.0.1
+            port: 22
+            state: started
+            timeout: 10
+
+        - name: "Assert the role refuses to start beside an unmanaged listener"
+          block:
+            - name: "Apply a config change with the managed service inactive"
+              ansible.builtin.include_role:
+                name: "{{ openssh_role_dir | basename }}"
+              vars:
+                openssh_server_settings:
+                  LoginGraceTime: "119"
+
+            - name: "Fail because the unmanaged listener was accepted"
+              ansible.builtin.fail:
+                msg: >-
+                  The role accepted an unmanaged sshd listener while ssh.service
+                  was inactive. A reload can become a start and collide with it.
+
+          rescue:
+            - name: "Assert the lifecycle preflight refused the orphan"
+              ansible.builtin.assert:
+                that:
+                  - >-
+                    ansible_failed_task.name
+                    is search('Refuse to start alongside unmanaged sshd processes')
+                fail_msg: >-
+                  The orphan-listener converge failed at the wrong task:
+                  {{ ansible_failed_task.name }}:
+                  {{ ansible_failed_result.msg | default('') }}
+                quiet: true
+
+            - name: "Re-read sshd_config after the refused converge"
+              ansible.builtin.slurp:
+                src: /etc/ssh/sshd_config
+              register: openssh_config_after_orphan
+
+            - name: "Assert the refused converge did not touch sshd_config"
+              ansible.builtin.assert:
+                that:
+                  - openssh_config_after_orphan.content
+                    == openssh_installed_config.content
+                fail_msg: >-
+                  sshd_config changed before the unmanaged listener was refused.
+                quiet: true
+
+        - name: "Mark the orphan-listener regression complete"
+          ansible.builtin.file:
+            path: /var/tmp/molecule-openssh-orphan-regression-complete
+            state: touch
+            owner: root
+            group: root
+            mode: "0600"
+
+      always:
+        - name: "Stop the unmanaged listener"
+          ansible.builtin.systemd_service:
+            name: molecule-sshd-orphan
+            state: stopped
+
+        - name: "Recreate the privilege separation directory after cleanup"
+          ansible.builtin.file:
+            path: /run/sshd
+            state: directory
+            owner: root
+            group: root
+            mode: "0755"
+
+        - name: "Restore SSH socket activation"
+          ansible.builtin.systemd_service:
+            name: ssh.socket
+            state: started
+          when: openssh_socket_active.rc == 0
+
+        - name: "Restore the managed SSH service"
+          ansible.builtin.systemd_service:
+            name: ssh
+            state: started
+
     # --- enabled state: Include first, drop-ins live -----------------------
     #
     # Rendered to a candidate path, not installed, so the converged state
@@ -70,6 +196,7 @@
         owner: root
         group: root
         mode: "0600"
+        force: false
         validate: "/usr/sbin/sshd -t -f %s"
       vars:
         openssh_enable_config_includes: true
