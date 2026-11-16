@@ -8,3 +8,53 @@
       ansible.builtin.apt:
         update_cache: true
         cache_valid_time: 3600
+
+    # A probe user plus a drop-in let the verifier ask sshd what it actually
+    # resolves for that user, with and without the Include enabled.
+    - name: "Create sshd drop-in probe user"
+      ansible.builtin.user:
+        name: "sshdprobe"
+        system: true
+        shell: "/usr/sbin/nologin"
+        create_home: false
+
+    - name: "Create sshd drop-in directory"
+      ansible.builtin.file:
+        path: "/etc/ssh/sshd_config.d"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: "Write sshd drop-in probe"
+      ansible.builtin.copy:
+        dest: "/etc/ssh/sshd_config.d/60-molecule-probe.conf"
+        owner: root
+        group: root
+        mode: "0644"
+        content: |
+          Match User sshdprobe
+              PermitListen 127.0.0.1:22999
+              PermitTTY no
+
+    # Strip the postinst-generated host keys so converge reaches the config
+    # tasks with none present -- the state validate: is most likely to break
+    # in, and one this role supports. Otherwise its key tasks always skip.
+    - name: "Install openssh-server ahead of the role"
+      ansible.builtin.apt:
+        pkg: "openssh-server"
+        state: present
+
+    - name: "Find the packaged host keys"
+      ansible.builtin.find:
+        paths: "/etc/ssh"
+        patterns: "ssh_host_*"
+      register: openssh_packaged_hostkeys
+
+    - name: "Remove the packaged host keys"
+      ansible.builtin.file:
+        path: "{{ item.path }}"
+        state: absent
+      loop: "{{ openssh_packaged_hostkeys.files }}"
+      loop_control:
+        label: "{{ item.path }}"
